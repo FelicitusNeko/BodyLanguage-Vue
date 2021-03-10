@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Body Language - game display</title>
+  <!--
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/across-tabs/1.2.0/across-tabs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.slim.js"></script>
+    <script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/3/jquery.textfill.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.2.0/anime.min.js"></script>
+    -->
+  <script src="js/across-tabs.min.js"></script>
+  <script src="js/jquery.slim.js"></script>
+  <script src="js/jquery.textfill.js"></script>
+  <script src="js/anime.min.js"></script>
+  <link rel="stylesheet" href="font/font.css">
+  <style>
+    html {
+      font-family: "Segoe UI", "Calibri", "Arial", sans-serif;
+      background-color: #1d2d40;
+      color: #d6deb3;
+      overflow: hidden;
+    }
+
+    img#logo {
+      position: absolute;
+      top: 42.5vh;
+      left: 50vw;
+      height: 75vh;
+      width: auto;
+      opacity: 0;
+      transform: translateX(-50%);
+      transform-origin: center;
+    }
+
+    div.contentpage {
+      position: absolute;
+      top: 35vh;
+      left: 5vw;
+      height: 90vh;
+      width: 90vw;
+      text-align: center;
+      opacity: 0;
+    }
+
+    div#wordlist {
+      font-size: 15vh;
+    }
+
+    div#timerboard {
+      position: absolute;
+      height: 85vh;
+      width: 50vw;
+      top: -95vh;
+      left: 25vw;
+
+      border: #15781f double 5px;
+      border-radius: 5vmin;
+      background-color: #1a662f;
+      box-shadow: 5vmin 5vmin 5vmin black;
+      color: #f6ef4c;
+      text-shadow: 0 0 1vmin #f6ef4c;
+    }
+
+    div#timerpanel {
+      font-family: "Digital dream", Courier, monospace;
+      position: absolute;
+      height: 60vh;
+      width: 44vw;
+      bottom: 5vh;
+      left: 2.5vw;
+      line-height: 60vh;
+
+      background-color: black;
+      text-align: right;
+      padding: 0 .5vw;
+      border-radius: 2vmin;
+    }
+
+    div.scoreboard {
+      position: absolute;
+      top: 15vh;
+      height: 40vh;
+      width: 47.5vw;
+      border-radius: 5vmin;
+      border: 5px double;
+      box-shadow: 10vmin 10vmin 10vmin rgba(#000000, 0.7);
+    }
+
+    div.scoreboard#t1sb {
+      background-color: #2575d2;
+      border-color: #3ccaf0;
+      left: -55vw;
+    }
+
+    div.scoreboard#t2sb {
+      background-color: #da2626;
+      border-color: #ff5c5c;
+      right: -55vw;
+    }
+
+    div.teamnamelabel {
+      font-family: "Segoe UI Black", "Segoe UI", "Calibri", "Arial", sans-serif;
+      position: absolute;
+      top: 5vh;
+      height: 10vh;
+      width: 25vw;
+      text-align: center;
+      line-height: 10vh;
+      color: white;
+      font-variant: small-caps;
+      text-shadow: .2em .2em .5em rgba(#000000, 0.7);
+    }
+
+    div.teamnamelabel#t1tn {
+      right: 2.5vw;
+    }
+
+    div.teamnamelabel#t2tn {
+      left: 2.5vw;
+    }
+
+    div.scorepanel {
+      font-family:
+        /*"Marengi Marquee Regular", "Marengi Marquee",*/
+        "Digital dream", Courier, monospace;
+
+      position: absolute;
+      top: 15vh;
+      height: 20vh;
+      width: 24vw;
+      line-height: 20vh;
+
+      background-color: black;
+      text-align: right;
+      color: #f6ef4c;
+      text-shadow: 0 0 1vmin rgba(#f6ef4c, 0.7);
+      border-radius: 2vmin;
+      padding: 0 .5vw;
+    }
+
+    div.scorepanel#t1sp {
+      right: 2.5vw;
+    }
+
+    div.scorepanel#t2sp {
+      left: 2.5vw;
+    }
+
+    div.blank {
+      display: inline-block;
+      height: 1.3em;
+      width: 5em;
+      margin: .1em 0;
+      background-color: black;
+      border: .05em #6989d7 solid;
+      border-radius: .2em;
+      box-shadow: .1em .1em .1em rgba(#000000, 0.7);
+      padding: .05em;
+    }
+
+    div.blank span:empty {
+      color: #2e93dd
+    }
+
+    div.blank.guessed span:empty {
+      color: #e1f65f
+    }
+
+    div.blank#b1 span:empty::after {
+      content: '①'
+    }
+
+    div.blank#b2 span:empty::after {
+      content: '②'
+    }
+
+    div.blank#b3 span:empty::after {
+      content: '③'
+    }
+
+    div.blank#b4 span:empty::after {
+      content: '④'
+    }
+
+    div.blank#b5 span:empty::after {
+      content: '⑤'
+    }
+
+    div.blank#b6 span:empty::after {
+      content: '⑥'
+    }
+
+    div.blank#b7 span:empty::after {
+      content: '⑦'
+    }
+
+    div.answerbg {
+      position: absolute;
+      top: 42vh;
+      left: 100vw;
+      height: 15vh;
+      width: 100vw;
+
+      border-top: .5vh solid;
+      border-bottom: .5vh solid;
+    }
+
+    div.answerbg#answerget {
+      background: linear-gradient(to right,
+          rgba(44, 119, 56, 0) 3%,
+          rgba(44, 119, 56, 1) 10%,
+          rgba(44, 119, 56, 1) 90%,
+          rgba(44, 119, 56, 0) 97%);
+      border-image: linear-gradient(to right,
+          rgba(67, 230, 83, 0) 0.5%,
+          rgba(67, 230, 83, 1) 6%,
+          rgba(67, 230, 83, 1) 94%,
+          rgba(67, 230, 83, 0) 99.5%) 1;
+    }
+
+    div.answerbg#answerlose {
+      background: linear-gradient(to right,
+          rgba(105, 50, 50, 0) 3%,
+          rgba(105, 50, 50, 1) 10%,
+          rgba(105, 50, 50, 1) 90%,
+          rgba(105, 50, 50, 0) 97%);
+      border-image: linear-gradient(to right,
+          rgba(215, 67, 67, 0) 0.5%,
+          rgba(215, 67, 67, 1) 6%,
+          rgba(215, 67, 67, 1) 94%,
+          rgba(215, 67, 67, 0) 99.5%) 1;
+    }
+
+    div#answercontainer {
+      position: absolute;
+      top: 42.5vh;
+      left: -100vw;
+      height: 15vh;
+      width: 100vw;
+      font-style: italic;
+      font-weight: bold;
+      text-align: center;
+      color: white;
+      text-shadow: .2em .2em .5em rgba(#000000, 0.7);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="puzzle" class="contentpage"><span id="puzzlecontent"></span></div>
+  <div id="wordlist" class="contentpage"><span></span></div>
+  <div id="timerboard">
+    <div id="timerpanel" class="numberdisplay"><span id="timercount">00</span></div>
+  </div>
+  <div id="t1sb" class="scoreboard">
+    <div id="t1tn" class="teamnamelabel"><span id="t1tns">Team #1</span></div>
+    <div id="t1sp" class="scorepanel numberdisplay"><span id="t1score">0000</span></div>
+  </div>
+  <div id="t2sb" class="scoreboard">
+    <div id="t2tn" class="teamnamelabel"><span id="t2tns">Team #2</span></div>
+    <div id="t2sp" class="scorepanel numberdisplay"><span id="t2score">0000</span></div>
+  </div>
+  <div id="answerget" class="answerbg answercomponent">&nbsp;</div>
+  <div id="answerlose" class="answerbg answercomponent">&nbsp;</div>
+  <div id="answercontainer" class="answercomponent"><span id="answertext"></span></div>
+  <img id="logo" src="img/Body_Language_logo.png">
+  <script>
+    const DTF = { maxFontPixels: 0 };
+
+    const
+      STATE_UNKNOWN = -1,
+      STATE_BLANK = 0,
+      STATE_TIMER = 1,
+      STATE_PREPUZZLE = 2,
+      STATE_PUZZLE = 3,
+      STATE_REVEAL = 4,
+      STATE_POSTPUZZLE = 5;
+
+    var state = STATE_BLANK;
+    var scoredisp = false;
+    var timerdisp = false;
+    var leftNewScore = null, rightNewScore = null;
+
+    const anims = {
+      logoAnim: anime.timeline(),
+      scoreboardAnim: anime.timeline(),
+      timerAnim: anime({
+        targets: 'div#timerboard',
+        translateY: '90vh',
+        duration: 1500,
+        easing: 'easeOutQuart',
+        autoplay: false
+      }),
+      wordListOut: anime({
+        targets: 'div#wordlist',
+        translateY: ['-30vh', '-60vh'],
+        opacity: [1, 0],
+        duration: 500,
+        easing: 'easeInQuart',
+        complete: () => {
+          anims.wordListOut.reset();
+          anims.wordListIn.reset();
+          $('div#wordlist span').empty();
+          if (state == STATE_PUZZLE) anims.puzzleIn.play();
+        },
+        autoplay: false
+      }),
+      wordListIn: anime({
+        targets: 'div#wordlist',
+        translateY: [0, '-30vh'],
+        opacity: [0, 1],
+        duration: 1500,
+        easing: 'easeOutQuart',
+        autoplay: false
+      }),
+      puzzleOut: anime({
+        targets: 'div#puzzle',
+        translateY: ['-30vh', '-60vh'],
+        opacity: [1, 0],
+        duration: 500,
+        easing: 'easeInQuart',
+        complete: () => {
+          anims.puzzleOut.reset();
+          anims.puzzleIn.reset();
+          $('span#puzzlecontent').empty();
+        },
+        autoplay: false
+      }),
+      puzzleIn: anime({
+        targets: 'div#puzzle',
+        translateY: [0, '-30vh'],
+        opacity: [0, 1],
+        duration: 1500,
+        easing: 'easeOutQuart',
+        autoplay: false
+      }),
+      answerContainerIn: anime({
+        targets: 'div#answercontainer',
+        translateX: '100vw',
+        delay: 700,
+        duration: 1000,
+        complete: () => anims.answerFade.play(),
+        autoplay: false
+      }),
+      answerGetIn: anime({
+        targets: 'div#answerget',
+        translateX: '-100vw',
+        duration: 1000,
+        easing: 'easeInOutQuart',
+        begin: () => anims.answerContainerIn.play(),
+        autoplay: false
+      }),
+      answerLoseIn: anime({
+        targets: 'div#answerlose',
+        translateX: '-100vw',
+        duration: 1000,
+        easing: 'easeInOutQuart',
+        begin: () => anims.answerContainerIn.play(),
+        autoplay: false
+      }),
+      answerFade: anime({
+        targets: 'div.answercomponent',
+        opacity: 0,
+        delay: 5000,
+        duration: 2000,
+        begin: () => {
+          if (leftNewScore !== null || rightNewScore !== null) {
+            if (scoredisp) {
+              animUpdateScore();
+            } else {
+              anims.scoreboardAnim.reset();
+              anims.scoreboardAnim.play();
+              scoredisp = true;
+            }
+          }
+        },
+        complete: () => {
+          anims.answerGetIn.reset();
+          anims.answerLoseIn.reset();
+          anims.answerContainerIn.reset();
+          anims.answerFade.reset();
+        },
+        easing: 'linear',
+        autoplay: false
+      })
+    };
+
+    anims.logoAnim.autoplay = false;
+    anims.logoAnim.add({
+      targets: 'img#logo',
+      translateX: ['-50%', '-50%'],
+      translateY: '-30vh',
+      opacity: 1,
+      duration: 1500,
+      easing: 'easeOutQuart',
+      offset: 0
+    }).add({
+      targets: 'img#logo',
+      translateX: ['-50%', '-50%'],
+      translateY: ['-30vh', '-30vh'],
+      opacity: 0,
+      scale: 1.5,
+      duration: 1500,
+      easing: 'easeOutQuart',
+      offset: 4500,
+      complete: () => $('img#logo').css('display', 'none')
+    });
+
+    anims.scoreboardAnim.autoplay = false;
+    anims.scoreboardAnim.add({
+      targets: 'div#t1sb',
+      translateX: '45vw',
+      duration: 1500,
+      easing: 'easeOutQuart',
+      offset: 0
+    }).add({
+      targets: 'div#t2sb',
+      translateX: '-45vw',
+      duration: 1500,
+      easing: 'easeOutQuart',
+      complete: animUpdateScore,
+      offset: 0
+    });
+
+    function animUpdateScore() {
+      if (leftNewScore !== null || rightNewScore !== null) {
+        var curScore = {
+          leftteam: parseInt($('#t1score').text()),
+          rightteam: parseInt($('#t2score').text())
+        };
+        var tallyScore = anime.timeline();
+        if (leftNewScore !== null && leftNewScore != curScore.leftteam) tallyScore.add({
+          targets: curScore,
+          leftteam: leftNewScore,
+          easing: 'linear',
+          round: 1,
+          update: a => { $('#t1score').text(curScore.leftteam); },
+          offset: 0
+        });
+        if (rightNewScore !== null && rightNewScore != curScore.rightteam) tallyScore.add({
+          targets: curScore,
+          rightteam: rightNewScore,
+          easing: 'linear',
+          round: 1,
+          update: a => { $('#t2score').text(curScore.rightteam); },
+          offset: 0
+        });
+        tallyScore.play();
+        if (state === STATE_POSTPUZZLE) setTimeout(() => {
+          leftNewScore = rightNewScore = null;
+          anims.scoreboardAnim.reverse();
+          anims.scoreboardAnim.play();
+          scoredisp = false;
+        }, 3500);
+      }
+    }
+
+    function adjust(full) {
+      if (full) $('div.numberdisplay').textfill(DTF);
+      $('div.teamnamelabel').textfill(DTF);
+      $('div#puzzle').textfill(DTF);
+      $('div.blank').textfill(DTF);
+      $('div#answercontainer').textfill(DTF);
+    }
+
+    const BLC = new AcrossTabs.default.Child({
+      onReady: function (data) {
+        adjust(true);
+        $('div.numberdisplay span').text('0');
+        console.log('Ready');
+      }, onInitialize: function (data) {
+        console.log('Init');
+      }, onParentCommunication: function (data) {
+        switch (data.type) {
+          case 'logo':
+            anims.logoAnim.play();
+            break;
+
+          case 'teamname':
+            if (data.leftteam) $('span#t1tns').text(data.leftteam);
+            if (data.rightteam) $('span#t2tns').text(data.rightteam);
+            adjust();
+            break;
+
+          case 'score':
+            $('div.scorepanel span').text('');
+            setTimeout(() => {
+              console.log(data);
+              if (data.leftteam || data.leftteam === 0) $('span#t1score').text(data.leftteam);
+              if (data.rightteam || data.rightteam === 0) $('span#t2score').text(data.rightteam);
+            }, 500);
+            break;
+
+          case 'scoreboard':
+            if (data.toggle === scoredisp) return;
+            else if (typeof data.toggle == 'boolean') {
+              anims.scoreboardAnim[data.toggle ? 'reset' : 'reverse']();
+              anims.scoreboardAnim.play();
+              scoredisp = data.toggle;
+            } break;
+
+          case 'timer':
+            if (data.toggle === timerdisp) return;
+            else if (typeof data.toggle == 'boolean') {
+              anims.timerAnim[data.toggle ? 'reset' : 'reverse']();
+              anims.timerAnim.play();
+              timerdisp = data.toggle;
+            } break;
+
+          case 'clock':
+            if (data.set === false) {
+              $('span#timercount').text('');
+              if (timerdisp) {
+                anims.timerAnim.reverse();
+                anims.timerAnim.play();
+                timerdisp = false;
+              }
+            } else {
+              if (data.set === true) {
+                if (scoredisp) {
+                  anims.scoreboardAnim.reverse();
+                  anims.scoreboardAnim.play();
+                  scoredisp = false;
+                } if (!timerdisp) {
+                  anims.timerAnim.reset();
+                  anims.timerAnim.play();
+                  timerdisp = true;
+                }
+              }
+              $('span#timercount').text(data.clock);
+            } break;
+
+          case 'showwords':
+            if (state >= STATE_PREPUZZLE) break;
+            if (scoredisp) {
+              anims.scoreboardAnim.reverse();
+              anims.scoreboardAnim.play();
+              scoredisp = false;
+            } if (timerdisp) {
+              anims.timerAnim.reverse();
+              anims.timerAnim.play();
+              timerdisp = false;
+            }
+            if (data.words.length === 0) data.words.push('¯\\_(ツ)_/¯');
+            $('div#wordlist span').html(data.words.join('<br>'));
+            $('div#wordlist').css('line-height', (90 / data.words.length) + 'vh');
+            anims.wordListIn.play();
+            state = STATE_PREPUZZLE;
+            break;
+
+          case 'showpuzzle':
+            if (state >= STATE_PUZZLE) return;
+            if (scoredisp) {
+              anims.scoreboardAnim.reverse();
+              anims.scoreboardAnim.play();
+              scoredisp = false;
+            } if (timerdisp) {
+              anims.timerAnim.reverse();
+              anims.timerAnim.play();
+              timerdisp = false;
+            }
+            var wordlist = [];
+            var solproc = '';
+            var puzproc = data.puzzle
+              .replace(/[\[{].*?[\]}]/g, w => { wordlist.push(w); return '|' })
+              .replace(/\s=.*/, s => { solproc = s; return ''; })
+              .split('|');
+
+            var blankgen = (function* (puzzleonly) {
+              for (var x = 0; x < 7; x++) {
+                var word = wordlist.shift();
+                var retval = document.createElement('div');
+                retval.className = 'blank';
+                if (data.guessed && data.guessed[x]) retval.className += ' guessed';
+                if (!puzzleonly && word[0] == '{') retval.dataset.unacted = true;
+                retval.dataset.word = word.substring(1, word.length - 1);
+                retval.id = 'b' + (x + 1);
+                retval.appendChild(document.createElement('span'));
+                yield retval;
+              }
+            })(data.puzzleonly);
+
+            var puzzle = $('div#puzzle span');
+            puzzle.empty();
+            while (puzproc.length > 0) {
+              puzzle.append(puzproc.shift());
+              puzzle.append(blankgen.next().value);
+            }
+            $('div#answercontainer span').text(solproc.substring(2));
+            adjust();
+            if (state == STATE_PREPUZZLE) anims.wordListOut.play();
+            else anims.puzzleIn.play();
+            state = STATE_PUZZLE;
+            break;
+
+          case 'reveal':
+            if (state < STATE_PUZZLE) return;
+            if (typeof data.word != 'number' || data.word < 1 || data.word > 7) return;
+            var wblank = $(`div.blank#b${data.word}`);
+            var wdata = wblank.data();
+            if (wdata.revealed) return;
+            wblank.children('span').text(wdata.word);
+            wblank.textfill(DTF);
+            wblank.data('revealed', true);
+            anime({
+              targets: `div.blank#b${data.word}`,
+              backgroundColor: wdata.unacted ? '#651919' : '#18531f'
+            });
+            break;
+
+          case 'hpwinner':
+            $('div#answercontainer span').text(data.winName);
+            $('div#answercontainer').textfill(DTF);
+          case 'answer':
+            if (data.type == 'answer' && state != STATE_PUZZLE) return;
+            anims[data.solved ? 'answerGetIn' : 'answerLoseIn'].play();
+            if (data.solved) {
+              leftNewScore = data.leftteam;
+              rightNewScore = data.rightteam;
+            }
+            if (data.type == 'answer') state = STATE_POSTPUZZLE;
+            break;
+
+          case 'clearpuzzle':
+            if (state < STATE_PUZZLE) return;
+            anims.puzzleOut.play();
+            state = STATE_BLANK;
+            break;
+
+          default:
+            console.log(data);
+            break;
+        }
+      }, onParentDisconnect: function (data) {
+        window.close();
+      }
+    });
+  </script>
+</body>
+
+</html>

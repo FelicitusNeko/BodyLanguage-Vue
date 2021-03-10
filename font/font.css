@@ -1,0 +1,39 @@
+@font-face {
+  font-family: 'Segoe UI';
+  src: 'font/SEGOEUI.TTF' format('truetype');
+}
+
+@font-face {
+  font-family: 'Segoe UI';
+  font-weight: bold;
+  src: 'font/SEGOEUIB.TTF' format('truetype');
+}
+
+@font-face {
+  font-family: 'Segoe UI';
+  font-style: italic;
+  src: 'font/SEGOEUII.TTF' format('truetype');
+}
+
+@font-face {
+  font-family: 'Segoe UI';
+  font-weight: bold;
+  font-style: italic;
+  src: 'font/SEGOEUIZ.TTF' format('truetype');
+}
+
+@font-face {
+  font-family: 'Segoe UI Black';
+  src: 'font/SEGUIBL.TTF' format('truetype');
+}
+
+@font-face {
+  font-family: 'Segoe UI Black';
+  font-style: italic;
+  src: 'font/SEGUIBLI.TTF' format('truetype');
+}
+
+@font-face {
+  font-family: 'Digital dream';
+  src: 'font/DIGITALDREAM.TTF' format('truetype');
+}

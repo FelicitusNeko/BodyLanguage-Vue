@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Body Language - main console</title>
+  <!--
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/across-tabs/1.2.0/across-tabs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.slim.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.min.js"></script>
+    <script src="https://unpkg.com/vue-nav-tabs/dist/vue-tabs.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/easytimer@1.1.1/src/easytimer.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/vue-nav-tabs/themes/vue-tabs.css">
+    -->
+  <script src="js/across-tabs.min.js"></script>
+  <script src="js/jquery.slim.js"></script>
+  <script src="js/vue.min.js"></script>
+  <script src="js/vue-tabs.js"></script>
+  <script src="js/easytimer.min.js"></script>
+  <link rel="stylesheet" href="css/vue-tabs.css">
+  <link rel="stylesheet" href="font/font.css">
+  <style>
+    html,
+    input,
+    select {
+      font-family: "Segoe UI", "Calibri", "Arial", sans-serif;
+      background-color: #1d2d40;
+      color: #d6deb3;
+    }
+
+    input,
+    select {
+      background-color: #18375c;
+    }
+
+    input::placeholder {
+      color: #a1a786;
+      font-style: italic;
+    }
+
+    input[type='number'] {
+      text-align: right;
+    }
+
+    div.tab-content {
+      padding: 5px;
+    }
+
+    div#main-interface {
+      position: absolute;
+      height: 70vh;
+      width: 90vw;
+      top: 5vh;
+      left: 5vw;
+      border: 1px solid lightgrey;
+      border-radius: 1vmin;
+    }
+
+    div#alt-interface {
+      position: absolute;
+      height: 20vh;
+      width: 90vw;
+      top: 75vh;
+      left: 5vw;
+      border: 1px solid lightgrey;
+      border-radius: 1vmin;
+    }
+
+    div#acting-extracontrols {
+      position: absolute;
+      top: 10vh;
+      right: 1vw;
+      width: 40vw;
+    }
+
+    button.prs {
+      margin: 0 5px;
+      min-width: 45px;
+    }
+
+    fieldset[disabled] {
+      color: #6e7357;
+    }
+
+    h4 {
+      margin: .8em .2em;
+    }
+
+    li.notshown {
+      color: #a1a786;
+      font-style: italic;
+    }
+
+    li.guessed {
+      color: #23b52e;
+      font-style: italic;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <div id="main-interface">
+      <vue-tabs>
+        <v-tab title="Game Setup">
+          <h4>Open displays</h4>
+          <button @click="setupOpenWordDisplay" :disabled="BLD.W != null">Open word display</button>
+          <button @click="setupOpenGameDisplay" :disabled="BLD.G != null">Open game display</button>
+          <button @click="setupLogo" :disabled="BLD.G === null || logoShown">Show logo</button>
+          <h4>Team names</h4>
+          <input v-for="(i,x) in teamNames" v-model="teamNames[x]" :placeholder="defaultTeamNames[x]" :data-index="x"
+            @input="setupChangeTeams"><br>
+          <h4>Who's playing?</h4>
+          <select v-for="(ix,x) in activeTeams" v-model="activeTeams[x]" :data-index="x" @change="setupChangeTeams">
+            <option v-for="(iy,y) in teamNames" :value="y">{{ iy || defaultTeamNames[y] }}</option>
+          </select><br>
+          Goal score: <input type="number" v-model="goalScore" :placeholder="goalScores[finalGame]">
+          <h4>Ready?</h4>
+          <label><input type="checkbox" v-model="finalGame" true-value="final" false-value="first"> This is the final
+            game</label><br>
+          <button @click="setupStartNewGame">Start a new game</button>
+        </v-tab>
+
+        <v-tab title="Round Setup">
+          <h3>Round #{{ roundNumber + 1 }}</h3>
+          <h4>Round type</h4>
+          <label><input type="radio" v-model="roundType" value="full" :disabled="puzzles.length == 0">Full round
+            [puzzles left: {{puzzles.length}}]</label><br>
+          <label><input type="radio" v-model="roundType" value="quick" :disabled="puzzles.length == 0">Quick round (no
+            acting)</label><br>
+          <label><input type="radio" v-model="roundType" value="hot">Hot Potato round (no puzzle)</label><br>
+          <h4>Scoring</h4>
+          Scores: ({{ teamNames[0] || defaultTeamNames[0] }} {{ score[0] }}) vs ({{ teamNames[1] || defaultTeamNames[1]
+          }} {{ score[1] }}) ~~
+          <input type="number" v-model="newScore[0]"><input type="number" v-model="newScore[1]">
+          <button @click="roundOverrideScores">Override scores</button><br>
+          <label>Round value: <input type="number" v-model="roundScore"
+              :placeholder="roundScores[finalGame][roundNumber] || 0"></label><br>
+          Holdover: {{ holdoverScore }} ~~
+          <input type="number" v-model="newHoldoverScore">
+          <button @click="roundOverrideHoldover">Override holdover score</button>
+          <h4>Ready?</h4>
+          <button @click="roundStart">Start the round</button>
+        </v-tab>
+
+        <v-tab title="Acting Round">
+          <h4>Clock</h4>
+          Time: {{ actingSeconds }}
+          <h4>Words</h4>
+          <ol>
+            <li v-for="(i,x) in wordsInPlay"
+              :class="[ i.shown ? 'shown' : 'notshown', i.guessed ? 'guessed' : 'notguessed' ].join(' ')">
+              <label><input type="checkbox" v-model="wordsInPlay[x].guessed" :disabled="!wordsInPlay[x].shown"
+                  :data-index="x" @change="actingManualState">
+                {{ i.word }} <span class="curword">{{ x == curWord ? '←' : '' }}</span></label>
+            </li>
+          </ol>
+          <button @click="actingStartPause" :disabled="actingClock == null">Start/Pause Clock</button>
+          <button @click="actingPass" :disabled="wordsInPlay.length < 1 || (wordsInPlay.length == 1 && curWord < 0)">{{
+            curWord < 0 ? 'First word' : 'Pass' }} </button>
+              <button @click="actingGet">Correct answer</button>
+              <button @click="actingBadClue">Invalid clue</button><br>
+              <div id="acting-extracontrols">
+                <fieldset id="frcontrol" :disabled="roundType != 'full'">
+                  <legend>Full round controls</legend>
+                  <button @click="actingSendWordsToGameDisplay" :disabled="actingSeconds > 0">Send guessed words to game
+                    display</button>
+                  <button @click="actingSendPuzzleToGameDisplay" :disabled="actingSeconds > 0">Send puzzle to game
+                    display</button>
+                </fieldset>
+                <fieldset id="hpcontrol" :disabled="roundType != 'hot'">
+                  <legend>Hot Potato controls</legend>
+                  Starting team:
+                  <select v-model="hpStartTeam">
+                    <option v-for="(i,x) in activeTeams" :value="x">{{ teamNames[i] || defaultTeamNames[i] }}</option>
+                  </select><br>
+                  Current team: {{ hotPotatoCurTeam }}<br>
+                  Current times: {{ hpSF[0] }} vs {{ hpSF[1] }}<br>
+                  <button @click="actingSendHPResultToGameDisplay" :disabled="actingSeconds > 0">
+                    Send Hot-Potato result to game display
+                  </button>
+                </fieldset>
+              </div>
+        </v-tab>
+
+        <v-tab title="Puzzle Round">
+          <h4>Puzzle</h4>
+          Phrase: {{ curPuzzlePhrase }}<br>
+          Answer: <b>{{ curPuzzleAnswer }}</b><br>
+          <h4>Reveal</h4>
+          <button v-for="x in 7" class="prs" :id="'pr' + (x-1)" :data-index="x" @click="puzzleReveal">{{ x
+            }}</button><br>
+          <h4>Answer</h4>
+          <button @click="puzzleAnswerClock">{{ answerSeconds ? answerSeconds + 'sec' : 'Answer clock' }}</button>
+          <button v-for="(i,x) in activeTeams" :data-index="x" @click="puzzleResolve">
+            Award to {{ teamNames[i] || defaultTeamNames[i] }}</button>
+          <button @click="puzzleResolve">Unsolved - discard puzzle</button>
+          <h4>Done?</h4>
+          <button @click="puzzleNextRound(false)">Clear puzzle and prepare for next round</button><br>
+          <button @click="puzzleNextRound(true)">Clear puzzle and prepare for next game</button>
+        </v-tab>
+      </vue-tabs>
+    </div>
+    <div id="alt-interface">
+      <vue-tabs>
+        <v-tab title="Soundboard">
+          Theme
+          <button @click="miscTheme(true)">Play</button>
+          <button @click="miscTheme(false)">Fade out</button><br>
+          <button @click="miscDing">Ding</button>
+          <button @click="miscDing(10)">Ding x10</button>
+          <button @click="miscPlay('buzz')">Buzz</button>
+        </v-tab>
+      </vue-tabs>
+    </div>
+  </div>
+  <script src="js/cpanel.js"></script>
+</body>
+
+</html>

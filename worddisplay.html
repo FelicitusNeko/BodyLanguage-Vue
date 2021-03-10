@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Body Language - word display</title>
+  <!--
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/across-tabs/1.2.0/across-tabs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.slim.js"></script>
+    <script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/3/jquery.textfill.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.2.0/anime.min.js"></script>
+    -->
+  <script src="js/across-tabs.min.js"></script>
+  <script src="js/jquery.slim.js"></script>
+  <script src="js/jquery.textfill.js"></script>
+  <script src="js/anime.min.js"></script>
+  <link rel="stylesheet" href="font/font.css">
+  <style>
+    html {
+      font-family: "Segoe UI", "Calibri", "Arial", sans-serif;
+      background-color: #1d2d40;
+      color: #d6deb3;
+      overflow: hidden;
+    }
+
+    div#wordmarkers {
+      position: absolute;
+      top: 2vh;
+      left: 0;
+      height: 10vh;
+      width: 100vw;
+      text-align: center;
+    }
+
+    div#wordmarkers table {
+      margin: auto;
+      height: 100%;
+    }
+
+    div#wordmarkers td {
+      width: 6vw;
+      font-size: 8vh;
+    }
+
+    div#word {
+      position: absolute;
+      top: 10vh;
+      left: 5vw;
+      height: 80vh;
+      width: 90vw;
+      text-align: center;
+    }
+
+    div#nextword {
+      position: absolute;
+      top: -90vh;
+      left: 5vw;
+      height: 80vh;
+      width: 90vw;
+      text-align: center;
+    }
+
+    div#timerbox {
+      position: absolute;
+      top: 2vh;
+      left: -3vw;
+      height: 10vh;
+      width: 13vw;
+
+      border: #4a131d solid 3px;
+      border-radius: 2vh;
+      background-color: #661f1a;
+      box-shadow: 1vw 1vh 2vmin black;
+    }
+
+    div#timer {
+      position: relative;
+      top: -.5vh;
+      left: -.5vw;
+      border: #4a131d solid 2px;
+
+      margin: 1vh .5vw;
+      margin-left: 4vw;
+      padding: .5vw .5vh;
+
+      font-family: "Digital dream", "Courier", monospace;
+      color: #2be23d;
+      text-align: right;
+      font-size: 6vh;
+      background-color: black;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="timerbox">
+    <div id="timer">60</div>
+  </div>
+  <div id="wordmarkers">
+    <table>
+      <tr>
+        <td>&#x25ce;</td>
+        <td>&#x25ce;</td>
+        <td>&#x25ce;</td>
+        <td>&#x25ce;</td>
+        <td>&#x25ce;</td>
+      </tr>
+    </table>
+  </div>
+  <div id="word" class="wordbox"><span class="wordspan">Wait...</span></div>
+  <div id="nextword" class="wordbox"><span class="wordspan">Wait...</span></div>
+  <script>
+    const anims = {
+      nextWordAnim: anime.timeline()
+    };
+
+    anims.nextWordAnim.autoplay = false;
+    anims.nextWordAnim.add({
+      targets: 'div#word',
+      translateX: '-100vw',
+      duration: 250,
+      easing: 'easeInQuart',
+      offset: 0
+    }).add({
+      targets: 'div#nextword',
+      translateY: '100vh',
+      duration: 250,
+      offset: 200,
+      complete: () => {
+        $('div#word span').text($('div#nextword span').text());
+        $('div#word').textfill({ maxFontPixels: 0 }).css('color', $('div#nextword').css('color'));
+        anims.nextWordAnim.reset();
+      }
+    });
+
+    function updateTimer(sec) {
+      if (sec === null) $('#timer').text('\xa0');
+      else $('#timer').text(Math.min(sec, 99));
+    }
+
+    function updateWord(word, hot) {
+      if (hot === undefined) hot = null;
+      $('div#nextword span').text(word.toUpperCase());
+      $('div#nextword').textfill({ maxFontPixels: 0 }).css('color', hot === null ? '' :
+        (hot === 0 ? '#6ca5e8' : '#e86c6c'));
+      anims.nextWordAnim.play();
+    }
+
+    function setUpMarkers(qty) {
+      var mtable = $('#wordmarkers tr');
+      mtable.empty();
+      for (var x = 0; x < qty; x++) mtable.append('<td>◎</td>');
+    }
+
+    function setMarker(index, state) {
+      var marker = $('#wordmarkers td')[index];
+      if (marker === undefined) return;
+      switch (state) {
+        case 'inactive': marker.style.color = ''; marker.innerText = '◎'; break;
+        case 'active': marker.style.color = ''; marker.innerText = '◉'; break;
+        case 'correct': marker.style.color = '#17ee53'; marker.innerText = '✓'; break;
+        case 'correct-blue': marker.style.color = '#6ca5e8'; marker.innerText = '✓'; break;
+        case 'correct-red': marker.style.color = '#e86c6c'; marker.innerText = '✓'; break;
+        case 'bad': marker.style.color = '#d91c1c'; marker.innerText = '❌'; break;
+      }
+    }
+
+    const BLC = new AcrossTabs.default.Child({
+      onReady: function (data) {
+        //updateWord('-READY-');
+        $('span.wordspan').text('-READY-');
+        $('div.wordbox').textfill({ maxFontPixels: 0 });
+        updateTimer(0);
+      }, onInitialize: function (data) {
+        console.log(data);
+      }, onParentCommunication: function (data) {
+        console.log(data);
+        switch (data.type) {
+          case 'word': updateWord(data.data, data.hot); break;
+          case 'clock':
+            if (data.set === false) updateTimer(null);
+            else updateTimer(data.clock);
+            break;
+          case 'markers': setUpMarkers(data.data); break;
+          case 'marker': setMarker(data.index, data.state); break;
+          case 'blank':
+            updateWord('');
+            updateTimer(null);
+            setUpMarkers(0);
+            break;
+        }
+      }, onParentDisconnect: function (data) {
+        window.close();
+      }
+    });
+  </script>
+</body>
+
+</html>
