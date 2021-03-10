@@ -17,7 +17,7 @@ The Hot Potato round is a new set of rules added for this application, which is 
 ## Missing files
 
 Certain files were withheld due to copyright concerns:
-- fonts [Microsoft]
+- font [Microsoft]
   - SEGOEUI.TTF
   - SEGOEUIB.TTF
   - SEGOEUII.TTF
